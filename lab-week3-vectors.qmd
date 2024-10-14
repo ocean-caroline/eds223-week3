@@ -1,0 +1,112 @@
+---
+title: "Week 3 Lab"
+author: "Caroline Edmonds"
+format: html
+editor: visual
+---
+
+## Load libraries
+
+```{r}
+library(tidyverse)
+library(sf)
+library(tmap)
+library(spData)
+```
+
+## Need to see someone's code as missed first data load
+
+```{r}
+nz <- spData::nz
+
+nz_height <- spData::nz_height %>%
+  select("Canterbury")
+```
+
+```{r}
+tm_shape(nz) +
+  tm_polygons() +
+  tm_shape(canterbury) +
+  tm_fill(col = "darkgrey") +
+  tm_shape(nz_height) +
+  tm_dots(col = "red")
+```
+
+## Part 2 of Class
+
+#Geomeetry operations
+
+## Aggregate data
+
+```{r}
+us_states <- spData::us_states
+us_states |>
+  group_by(REGION) |>
+  summarise(population = sum(total_pop_15, na.rm=TRUE))
+
+tmap_mode("plot")
+tm_shape(us_states) + 
+  tm_polygons()
+
+```
+
+`{r}us_west us_west`
+
+```{r}
+us_west <- us_states[us_states$REGION == "West",]
+
+us_west_union <- st_union(us_west)
+
+texas <- us_states[us_states$NAME == "Texas",]
+texas_union <- st_union(us_west_union, texas)
+
+tm_shape(texas_union) + tm_polygons()
+```
+
+## Buffering
+
+```{r}
+seine <- spData::seine
+seine_buffer <- st_buffer(seine, dist = 50000)
+
+tm_shape(seine_buffer) + tm_polygons()+
+tm_shape(seine) + tm_lines()
+
+
+seine_union <- st_union(seine_buffer)
+tm_shape(seine_union) + tm_polygons()+
+tm_shape(seine) + tm_lines()
+```
+
+```{r}
+x <- st_sfc(st_point(c(0,1))) %>%
+  st_buffer(., dist = 1) %>%  # if use |> then do not need .
+  st_as_sf()
+
+y <- st_sfc(st_point(c(1,1))) %>%
+  st_buffer(., dist = 1) %>%
+  st_as_sf()
+
+
+bbox <- st_union(x,y)
+
+tm_shape(x, bbox = bbox) +
+  tm_borders(col = "red") +
+  tm_shape(y, bbox = bbox) +
+  tm_borders(col = "blue")
+
+```
+
+
+
+```{r}
+
+seine_simple <- st_simplify(seine, dTolerance = 500)
+
+tm_shape(seine_simple) + tm_lines() 
+
+#use full data set for analysis but for plotting on maps simplfy to save space and allow your reader to undestand.
+  
+
+```
+
